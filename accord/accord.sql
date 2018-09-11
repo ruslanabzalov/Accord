@@ -10,197 +10,179 @@ GO
 USE accord
 GO
 
--- Таблица "Покупатели"
-CREATE TABLE Customer
-(
-	CustomerID int NOT NULL PRIMARY KEY IDENTITY(1,1),
-	CustomerType varchar(20) NOT NULL,
-	CHECK(CustomerType IN ('Частное лицо','Юридическое лицо'))
+-- Таблица "Покупатели".
+CREATE TABLE customers (
+	id INT NOT NULL PRIMARY KEY IDENTITY(1, 1),
+	customers_type NVARCHAR(16) NOT NULL,
+	
+	CHECK(customers_type IN (N'Частное лицо', N'Юридическое лицо'))
 )
 GO
 
--- Таблица "Частные лица"
-CREATE TABLE Person
-(
-	CustomerID int NOT NULL PRIMARY KEY FOREIGN KEY REFERENCES Customer(CustomerID) ON DELETE CASCADE,
-	LastName varchar(20) NOT NULL,
-	FirstName varchar(20) NOT NULL,
-	MiddleName varchar(20) NULL DEFAULT 'Не указано',
-	BirthDate date NOT NULL,
-	PassportSeries int NOT NULL,
-	PassportNumber int NOT NULL,
-	HomeAddress varchar(60) NOT NULL,
-	PhoneNumber varchar(20) NOT NULL,
-	ChangedAt datetime NULL,
-	CHECK(PassportSeries > 0 AND PassportNumber > 0),
-	CHECK(phoneNumber LIKE '+7([0-9][0-9][0-9])[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
-	CONSTRAINT UQ_Person UNIQUE(PassportSeries, PassportNumber)
+-- Таблица "Частные лица".
+CREATE TABLE persons (
+	id INT NOT NULL PRIMARY KEY FOREIGN KEY REFERENCES customers(id) ON DELETE CASCADE,
+	last_name NVARCHAR(30) NOT NULL,
+	first_name NVARCHAR(30) NOT NULL,
+	patronymic NVARCHAR(30) NOT NULL DEFAULT N'Не указано',
+	date_of_birth DATE NOT NULL,
+	passport_series VARCHAR(5) NOT NULL,
+	passport_id VARCHAR(6) NOT NULL,
+	home_address NVARCHAR(60) NOT NULL,
+	phone_number VARCHAR(16) NOT NULL,
+	changed_at DATETIME NULL,
+
+	CHECK(passport_series LIKE '[0-9][0-9] [0-9][0-9]'),
+	CHECK(passport_id LIKE '[0-9][0-9][0-9][0-9][0-9][0-9]'),
+	CHECK(phone_number LIKE '+7([0-9][0-9][0-9])[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+
+	CONSTRAINT uq_persons UNIQUE(passport_series, passport_id)
 )
 GO
 
--- Таблица "Юридические лица"
-CREATE TABLE Company
-(
-	CustomerID int NOT NULL PRIMARY KEY FOREIGN KEY REFERENCES Customer(CustomerID) ON DELETE CASCADE,
-	CompanyName varchar(40) NOT NULL,
-	CompanyAddress varchar(40) NOT NULL,
-	CompanyPhoneNumber varchar(20) NOT NULL,
-	LicenseNumber int NOT NULL,
-	BankDetails varchar(40) NOT NULL,
-	CateGOry varchar(40) NOT NULL,
-	ChangedAt datetime NULL,
-	CHECK(CompanyPhoneNumber LIKE '+7([0-9][0-9][0-9])[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
-	CHECK(LicenseNumber > 0),
-	CONSTRAINT UQ_Company UNIQUE(CompanyName, LicenseNumber)
+-- Таблица "Юридические лица".
+CREATE TABLE companies (
+	id INT NOT NULL PRIMARY KEY FOREIGN KEY REFERENCES customers(id) ON DELETE CASCADE,
+	company_name NVARCHAR(40) NOT NULL,
+	company_address NVARCHAR(40) NOT NULL,
+	phone_number VARCHAR(16) NOT NULL,
+	license_id VARCHAR(20) NOT NULL,
+	bank_details NVARCHAR(40) NOT NULL,
+	category NVARCHAR(30) NOT NULL,
+	changed_at DATETIME NULL,
+
+	CHECK(phone_number LIKE '+7([0-9][0-9][0-9])[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+	CHECK(license_id > 0),
+
+	CONSTRAINT uq_companies UNIQUE(company_name, license_id)
 )
 GO
 
--- Таблица "Группы покупателей"
-CREATE TABLE CustomersGroup
-(
-	GroupID int NOT NULL PRIMARY KEY IDENTITY(1,1),
-	GroupName varchar(20) NOT NULL UNIQUE
+-- Таблица "Группы покупателей".
+CREATE TABLE customers_groups (
+	id INT NOT NULL PRIMARY KEY IDENTITY(1, 1),
+	group_name NVARCHAR(40) NOT NULL UNIQUE
 )
 GO
 
--- Таблица "Покупатели в группах покупателей"
-CREATE TABLE CustomerInCustomersGroup
-(
-	CustomerID int NOT NULL FOREIGN KEY REFERENCES Customer(CustomerID) ON DELETE CASCADE,
-	GroupID int NOT NULL FOREIGN KEY REFERENCES CustomersGroup(GroupID) ON DELETE CASCADE,
-	CONSTRAINT PK_CustomerInCustomersGroup PRIMARY KEY(CustomerID, GroupID)
+-- Таблица "Покупатели в группах покупателей".
+CREATE TABLE customers_in_customers_group (
+	customer_id INT NOT NULL FOREIGN KEY REFERENCES customers(id) ON DELETE CASCADE,
+	group_id INT NOT NULL FOREIGN KEY REFERENCES customers_groups(id) ON DELETE CASCADE,
+
+	CONSTRAINT pk_customer_in_customers_group PRIMARY KEY(customer_id, group_id)
 )
 GO
 
--- Таблица "Товары"
-CREATE TABLE Product
-(
-	ProductID int NOT NULL PRIMARY KEY IDENTITY(1,1),
-	ProductName varchar(25) NOT NULL,
-	VendorCode int NOT NULL,
-	CertificateNumber int NOT NULL,
-	Packing varchar(20) NOT NULL,
-	Manufacturer varchar(20) NOT NULL,
-	StorageQuantity integer NOT NULL,
-	CHECK(CertificateNumber > 0 AND StorageQuantity >= 0),
-	CHECK(Packing IN ('Большая упаковка','Маленькая упаковка'))
+-- Таблица "Товары".
+CREATE TABLE products (
+	id INT NOT NULL PRIMARY KEY IDENTITY(1, 1),
+	product_name NVARCHAR(40) NOT NULL,
+	vendor_code INT NOT NULL,
+	certificate_number INT NOT NULL,
+	packaging NVARCHAR(18) NOT NULL,
+	manufacturer NVARCHAR(40) NOT NULL,
+	storage_quantity INT NOT NULL,
+
+	CHECK(certificate_number > 0 AND storage_quantity >= 0),
+	CHECK(packaging IN (N'Большая упаковка', N'Маленькая упаковка'))
 )
 GO
 
--- Таблица "Прайс-листы"
-CREATE TABLE PriceList
-(
-	PriceListID int NOT NULL PRIMARY KEY IDENTITY(1,1),
-	GroupID integer NOT NULL FOREIGN KEY REFERENCES CustomersGroup(GroupID) ON DELETE CASCADE,
-	PriceListDate date NOT NULL,
-	PriceListCateGOry varchar(30) NOT NULL
+-- Таблица "Прайс-листы".
+CREATE TABLE price_lists (
+	id INT NOT NULL PRIMARY KEY IDENTITY(1, 1),
+	group_id INT NOT NULL FOREIGN KEY REFERENCES customers_groups(id) ON DELETE CASCADE,
+	creation_date DATE NOT NULL,
+	category NVARCHAR(40) NOT NULL
 )
 GO
 
--- Таблица "Товары в прайс-листах"
-CREATE TABLE ProductInPriceList
-(
-	ProductInPriceID integer IDENTITY(1,1) NOT NULL,
-	PriceListID integer NOT NULL,
-	ProductID integer NOT NULL,
-	ProductPrice smallmoney NOT NULL,
-
-	CONSTRAINT PK_ProductInPriceList PRIMARY KEY(ProductInPriceID),
-	CONSTRAINT FK_ProductInPriceList_PriceList FOREIGN KEY(PriceListID) REFERENCES PriceList(PriceListID) ON DELETE CASCADE,
-	CONSTRAINT FK_ProductInPriceList_Product FOREIGN KEY(ProductID) REFERENCES Product(ProductID) ON DELETE CASCADE
+-- Таблица "Товары в прайс-листах".
+CREATE TABLE products_in_price_lists (
+	id INT NOT NULL PRIMARY KEY IDENTITY(1, 1),
+	price_list_id INT NOT NULL FOREIGN KEY REFERENCES price_lists(id) ON DELETE CASCADE,
+	product_id INT NOT NULL FOREIGN KEY REFERENCES products(id) ON DELETE CASCADE,
+	product_price SMALLMONEY NOT NULL
 )
 GO
 
--- Таблица "Платёжные документы"
-CREATE TABLE PaymentDocument
-(
-	DocumentID int IDENTITY(1,1) NOT NULL,
-	DocumentType varchar(35)  NOT NULL,
-	PaymentDate datetime NULL,
-	PaymentAmount decimal(9,2) NOT NULL,
+-- Таблица "Платёжные документы".
+CREATE TABLE payment_documents (
+	id INT NOT NULL PRIMARY KEY IDENTITY(1, 1),
+	document_type NVARCHAR(30) NOT NULL,
+	payment_date DATETIME NULL,
+	payment_amount DECIMAL(9, 2) NOT NULL,
 
-	CONSTRAINT PK_DocumentID PRIMARY KEY(DocumentID),
-	CONSTRAINT CHK_PaymentDocument_DocumentType CHECK(DocumentType IN ('Банковское платёжное поручение','Приходной кассовый ордер')),
-	CONSTRAINT CHK_PaymentDocument_PaymentAmount CHECK(PaymentAmount > 0)
+	CHECK(document_type IN (N'Банковское платёжное поручение', N'Приходной кассовый ордер')),
+	CHECK(payment_amount > 0)
 )
 GO
 
--- Таблица "Накладные"
-CREATE TABLE Invoice
-(
-	InvoiceID int IDENTITY(1,1) NOT NULL,
-	CustomerID int NOT NULL,
-	DocumentID int NOT NULL,
-	PriceNumber int NOT NULL,
-	IssueDate datetime NOT NULL,
-	PaymentDate datetime NULL,
-	ExportTime datetime NOT NULL,
-	Canceled varchar(30) NULL,
+-- Таблица "Накладные".
+CREATE TABLE invoices (
+	id INT NOT NULL PRIMARY KEY IDENTITY(1, 1),
+	customer_id INT NOT NULL FOREIGN KEY REFERENCES customers(id) ON DELETE CASCADE,
+	document_id INT NOT NULL FOREIGN KEY REFERENCES payment_documents(id) ON DELETE CASCADE,
+	price_number INT NOT NULL,
+	issue_date DATETIME NOT NULL,
+	payment_date DATETIME NULL,
+	export_time DATETIME NOT NULL,
+	canceled NVARCHAR(30) NULL,
 
-	CONSTRAINT PK_Invoice PRIMARY KEY(InvoiceID),
-	CONSTRAINT FK_Invoice_Customer FOREIGN KEY(CustomerID) REFERENCES Customer(CustomerID) ON DELETE CASCADE,
-	CONSTRAINT FK_Invoice_PaymentDocument FOREIGN KEY(DocumentID) REFERENCES PaymentDocument(DocumentID) ON DELETE CASCADE,
-	CONSTRAINT CHK_Invoice_PriceNumber CHECK(PriceNumber > 0)
+	CHECK(price_number > 0)
 )
 GO
 
--- Таблица "Сделки"
-CREATE TABLE Deal
-(
-	DealID int IDENTITY(1,1) NOT NULL,
-	InvoiceID int NOT NULL,
-	ProductInPriceID int NOT NULL,
-	Quantity int NOT NULL,
+-- Таблица "Сделки".
+CREATE TABLE deals (
+	id INT NOT NULL PRIMARY KEY IDENTITY(1, 1),
+	invoice_id INT NOT NULL FOREIGN KEY REFERENCES invoices(id) ON DELETE CASCADE,
+	product_in_price_id INT NOT NULL FOREIGN KEY REFERENCES products_in_price_lists(id) ON DELETE CASCADE,
+	quantity INT NOT NULL,
 
-	CONSTRAINT PK_Deal PRIMARY KEY(DealID),
-	CONSTRAINT FK_Deal_Invoice FOREIGN KEY(InvoiceID) REFERENCES Invoice(InvoiceID) ON DELETE CASCADE,
-	CONSTRAINT FK_Deal_ProductInPrice FOREIGN KEY(ProductInPriceID) REFERENCES ProductInPriceList(ProductInPriceID) ON DELETE CASCADE
+	CHECK(quantity > 0)
 )
 GO
 
--- ЗАПОЛНЕНИЕ ТАБЛИЦ ДАННЫМИ
+-- ЗАПОЛНЕНИЕ ТАБЛИЦ ДАННЫМИ.
 
-INSERT INTO Customer
-(CustomerType)
+INSERT INTO customers
 VALUES
-('Частное лицо'),
-('Частное лицо'),
-('Юридическое лицо'),
-('Юридическое лицо'),
-('Частное лицо'),
-('Юридическое лицо'),
-('Частное лицо'),
-('Частное лицо')
+(N'Частное лицо'),
+(N'Частное лицо'),
+(N'Юридическое лицо'),
+(N'Юридическое лицо'),
+(N'Частное лицо'),
+(N'Юридическое лицо'),
+(N'Частное лицо'),
+(N'Частное лицо')
 GO
 
-INSERT INTO Person
-(CustomerID, LastName, FirstName, MiddleName, BirthDate, PassportSeries, PassportNumber, HomeAddress, PhoneNumber)
+INSERT INTO persons
 VALUES
-(1,'Иванов','Иван','Иванович','05/03/1985',4526,325896,'Октябрьская улица, 57','+7(999)965-87-36'),
-(2,'Сидоров','Алексей','Николаевич','26/10/1971',4549,269824,'Пролетарская улица, 2','+7(916)268-16-43'),
-(5,'Стасов','Михаил','Михайлович','11/07/1964',4582,731946,'Советская улица, 13','+7(985)753-14-74'),
-(7,'Михайлов','Олег','Николаевич','14/08/1984',4581,349885,'Пролетарская улица, 7','+7(916)368-82-12'),
-(8,'Куприянов','Владимир','Владимирович','06/09/1993',4516,965245,'Советская улица, 29','+7(985)346-28-43')
+(1, N'Иванов', N'Иван', N'Иванович', '1985-03-05', '45 26', '325896', N'Октябрьская улица, 57', '+7(999)965-87-36', NULL),
+(2, N'Сидоров', N'Алексей', DEFAULT, '1971-10-26', '45 49', '269824', N'Пролетарская улица, 2', '+7(916)268-16-43', NULL),
+(5, N'Стасов', N'Михаил', DEFAULT, '1964-07-11', '45 82', '731946', N'Советская улица, 13', '+7(985)753-14-74', NULL),
+(7, N'Михайлов', N'Олег', N'Николаевич', '1984-08-14', '45 81', '349885', N'Пролетарская улица, 7', '+7(916)368-82-12', NULL),
+(8, N'Куприянов', N'Владимир', N'Владимирович', '1993-09-06', '45 16', '965245', N'Советская улица, 29', '+7(985)346-28-43', NULL)
 GO
 
-INSERT INTO Company
-(CustomerID, CompanyName, CompanyAddress, CompanyPhoneNumber, LicenseNumber, BankDetails, CateGOry)
+INSERT INTO companies
 VALUES
-(3,'ГорГаз','Московская улица, 66','+7(915)846-96-32',852963741,'Сбербанк России','Государственное предприятие'),
-(4,'ГорСтрой','Ленинградская улица, 29/3','+7(999)264-49-21',159753456,'Сбербанк России','Государственное предприятие'),
-(6,'Dirty Monk Inc.','Международный проспект, 3','+7(915)846-96-32',789654123,'Рокетбанк','Частная организация')
+(3, N'ГорГаз', N'Московская улица, 66', '+7(915)846-96-32', '852963741', N'Сбербанк России', N'Государственное предприятие', NULL),
+(4, N'ГорСтрой', N'Ленинградская улица, 29/3', '+7(999)264-49-21', '159753456', N'Сбербанк России', N'Государственное предприятие', NULL),
+(6, 'Dirty Monk Inc.', N'Международный проспект, 3', '+7(915)846-96-32', '789654123', N'Рокетбанк', N'Частная организация', NULL)
 GO
 
-INSERT INTO CustomersGroup
-(GroupName)
+INSERT INTO customers_groups
 VALUES
-('Новый клиент'),
-('Постоянный клиент'),
-('Льготник')
+(N'Новый клиент'),
+(N'Постоянный клиент'),
+(N'Льготник')
 GO
 
-INSERT INTO CustomerInCustomersGroup
-(CustomerID, GroupID)
+INSERT INTO customers_in_customers_group
 VALUES
 (1,1),
 (2,2),
@@ -212,100 +194,72 @@ VALUES
 (8,2)
 GO
 
-INSERT INTO Product
-(ProductName, VendorCode, CertificateNumber, Packing, Manufacturer, StorageQuantity)
+INSERT INTO products
 VALUES
-('Молоток',123,456,'Большая упаковка','Твой инструмент',20),
-('Отвёртка',465,934,'Большая упаковка','Твой инструмент',3),
-('Топор',348,753,'Большая упаковка','Твой инструмент',30),
-('Дрель',357,942,'Большая упаковка','Твой инструмент',15),
-('Пила',495,639,'Большая упаковка','Твой инструмент',19),
-('Сверло',987,888,'Маленькая упаковка','Твой инструмент',9)
+(N'Молоток', 123, 456, N'Большая упаковка', N'Твой инструмент', 20),
+(N'Отвёртка', 465, 934, N'Большая упаковка', N'Твой инструмент', 3),
+(N'Топор', 348, 753, N'Большая упаковка', N'Твой инструмент', 30),
+(N'Дрель', 357, 942, N'Большая упаковка', N'Твой инструмент', 15),
+(N'Пила', 495, 639, N'Большая упаковка', N'Твой инструмент', 19),
+(N'Сверло', 987, 888, N'Маленькая упаковка', N'Твой инструмент', 9)
 GO
 
-INSERT INTO PriceList
-(GroupID, PriceListDate, PriceListCateGOry)
+INSERT INTO price_lists
 VALUES
-(1,'01/01/2000','Основной'),
-(2,'01/01/2001','Скидочный'),
-(3,'01/01/2001','Скидочный+')
+(1, '2000-01-01', N'Основной'),
+(2, '2001-01-01', N'Скидочный'),
+(3, '2001-01-01', N'Скидочный+')
 GO
 
-INSERT INTO ProductInPriceList
-(PriceListID, ProductID, ProductPrice)
+INSERT INTO products_in_price_lists
 VALUES
-(1,1,1000),
-(1,2,500),
-(1,3,1200),
-(1,4,3000),
-(1,5,2200),
-(1,6,50),
-(2,1,900),
-(2,2,400),
-(2,3,1100),
-(2,4,2800),
-(2,5,2100),
-(2,6,45),
-(3,1,800),
-(3,2,300),
-(3,3,1000),
-(3,4,2600),
-(3,5,2000),
-(3,6,40)
+(1, 1, 1000),
+(1, 2, 500),
+(1, 3, 1200),
+(1, 4, 3000),
+(1, 5, 2200),
+(1, 6, 50),
+(2, 1, 900),
+(2, 2, 400),
+(2, 3, 1100),
+(2, 4, 2800),
+(2, 5, 2100),
+(2, 6, 45),
+(3, 1, 800),
+(3, 2, 300),
+(3, 3, 1000),
+(3, 4, 2600),
+(3, 5, 2000),
+(3, 6, 40)
 GO
 
-INSERT INTO PaymentDocument
-(DocumentType, PaymentDate, PaymentAmount)
+INSERT INTO payment_documents
 VALUES
-('Приходной кассовый ордер',NULL,3000),
-('Приходной кассовый ордер',NULL,1800),
-('Банковское платёжное поручение',NULL,1100),
-('Приходной кассовый ордер',NULL,1200),
-('Банковское платёжное поручение',NULL,2800),
-('Банковское платёжное поручение',NULL,450),
-('Приходной кассовый ордер',NULL,4200),
-('Приходной кассовый ордер',NULL,1000),
-('Банковское платёжное поручение',NULL,3300)
-/*
-('Приходной кассовый ордер','04/02/2016',3000),
-('Приходной кассовый ордер',NULL,1800),
-('Банковское платёжное поручение','22/11/2016',1100),
-('Приходной кассовый ордер','07/02/2016',1200),
-('Банковское платёжное поручение','24/09/2016',2800),
-('Банковское платёжное поручение',NULL,450),
-('Приходной кассовый ордер','08/12/2016',4200),
-('Приходной кассовый ордер','01/02/2016',1000),
-('Банковское платёжное поручение',NULL,3300)
-*/
+(N'Приходной кассовый ордер', NULL, 3000),
+(N'Приходной кассовый ордер', NULL, 1800),
+(N'Банковское платёжное поручение', NULL, 1100),
+(N'Приходной кассовый ордер', NULL, 1200),
+(N'Банковское платёжное поручение', NULL, 2800),
+(N'Банковское платёжное поручение', NULL, 450),
+(N'Приходной кассовый ордер', NULL, 4200),
+(N'Приходной кассовый ордер', NULL, 1000),
+(N'Банковское платёжное поручение', NULL, 3300)
 GO
 
-INSERT INTO Invoice
-(CustomerID, DocumentID, PriceNumber, IssueDate, PaymentDate, ExportTime, Canceled)
+INSERT INTO invoices
 VALUES
-(1,1,1,'04/02/2016',NULL,'04/02/2016',DEFAULT),
-(2,2,2,'16/10/2016',NULL,'16/10/2016',DEFAULT),
-(3,3,2,'22/11/2016',NULL,'22/11/2016',DEFAULT),
-(5,4,3,'07/02/2016',NULL,'07/02/2016',DEFAULT),
-(3,5,2,'24/09/2016',NULL,'24/09/2016',DEFAULT),
-(3,6,2,'11/08/2016',NULL,'11/08/2016',DEFAULT),
-(2,7,2,'08/12/2016',NULL,'08/12/2016',DEFAULT),
-(7,8,1,'01/02/2016',NULL,'01/02/2016',DEFAULT),
-(6,9,2,'12/12/2016',NULL,'12/12/2016',DEFAULT)
-/*
-(1,1,1,'04/02/2016','04/02/2016','04/02/2016',DEFAULT),
-(2,2,2,'16/10/2016',NULL,'16/10/2016','Аннулировано'),
-(3,3,2,'22/11/2016','22/11/2016','22/11/2016',DEFAULT),
-(5,4,3,'07/02/2016','07/02/2016','07/02/2016',DEFAULT),
-(3,5,2,'24/09/2016','24/09/2016','24/09/2016',DEFAULT),
-(3,6,2,'11/08/2016',NULL,'11/08/2016','Аннулировано'),
-(2,7,2,'08/12/2016','08/12/2016','08/12/2016',DEFAULT),
-(7,8,1,'01/02/2016','01/02/2016','01/02/2016',DEFAULT),
-(6,9,2,'12/12/2016',NULL,'12/12/2016','Аннулировано')
-*/
+(1, 1, 1, '2016-02-04', NULL, '2016-02-04', NULL),
+(2, 2, 2, '2016-10-16', NULL, '2016-10-16', NULL),
+(3, 3, 2, '2016-11-22', NULL, '2016-11-22', NULL),
+(5, 4, 3, '2016-02-07', NULL, '2016-02-07', NULL),
+(3, 5, 2, '2016-09-24', NULL, '2016-09-24', NULL),
+(3, 6, 2, '2016-08-11', NULL, '2016-08-11', NULL),
+(2, 7, 2, '2016-12-08', NULL, '2016-12-08', NULL),
+(7, 8, 1, '2016-02-11', NULL, '2016-02-11', NULL),
+(6, 9, 2, '2016-12-12', NULL, '2016-12-12', NULL)
 GO
 
-INSERT INTO Deal
-(InvoiceID, ProductInPriceID, Quantity)
+INSERT INTO deals
 VALUES
 (1, 4, 1),
 (2, 7, 2),
@@ -318,37 +272,48 @@ VALUES
 (9, 9, 3)
 GO
 
--- ВЫБОРКА ДАННЫХ ИЗ ТАБЛИЦ
+-- ВЫБОРКА ВСЕХ ДАННЫХ ИЗ ВСЕХ ТАБЛИЦ.
 
-SELECT * FROM Customer
+SELECT *
+FROM customers
 GO
 
-SELECT * FROM Person
+SELECT *
+FROM persons
 GO
 
-SELECT * FROM Company
+SELECT *
+FROM companies
 GO
 
-SELECT * FROM CustomersGroup
+SELECT *
+FROM customers_groups
 GO
 
-SELECT * FROM CustomerInCustomersGroup
+SELECT *
+FROM customers_in_customers_group
 GO
 
-SELECT * FROM Product
+SELECT *
+FROM products
 GO
 
-SELECT * FROM PriceList
+SELECT *
+FROM price_lists
 GO
 
-SELECT * FROM ProductInPriceList
+SELECT *
+FROM products_in_price_lists
 GO
 
-SELECT * FROM PaymentDocument
+SELECT *
+FROM payment_documents
 GO
 
-SELECT * FROM Invoice
+SELECT *
+FROM invoices
 GO
 
-SELECT * FROM Deal
+SELECT *
+FROM deals
 GO

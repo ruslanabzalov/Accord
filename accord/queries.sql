@@ -16,7 +16,6 @@ GO
 которые могут использовать данную категорию прайс-листа (колонка B); доля использования категории
 прайс-листа (колонка A / колонка B; в процентах).
 */
-
 SELECT	PriceList.PriceListID AS 'ID прайс-листа',
 		PriceList.PriceListCategory AS 'Категория прайс-листа',
 		COUNT(DISTINCT Invoice.InvoiceID) AS 'Кол-во оформленных накладных по прайс-листам',
@@ -47,7 +46,6 @@ GO
 накладных (неполученный доход); кол-во неоплаченных накладных; общая стоимость товара в неоплаченных
 накладных (долг).
 */
-
 SELECT	Customer.CustomerID AS 'ID клиента',
 		Customer.CustomerType AS 'Тип документа',
 		COUNT(Invoice.InvoiceID) AS 'Кол-во оформленных накладных',
@@ -137,7 +135,6 @@ GO
 информация о прайс-листе; кол-во различных видов проданных товаров из данного прайс-листа; кол-во разных клиентов,
 использовавших данный прайс-лист.
 */
-
 SELECT	PriceList.PriceListID AS 'ID прайс-листа',
 		PriceList.PriceListCategory AS 'Категория прайс-листа',
 		SUM(#Deal.Quantity) AS 'Кол-во различных видов проданных товаров',
@@ -150,7 +147,6 @@ FROM	PriceList LEFT OUTER JOIN ProductInPriceList
 		
 		LEFT OUTER JOIN Invoice AS #Invoice
 		ON #Deal.InvoiceID = #Invoice.InvoiceID
-		
 WHERE	MONTH(#Invoice.PaymentDate) <= (MONTH(getdate()) - 6)
 GROUP BY PriceList.PriceListID, PriceList.PriceListCategory
 GO
@@ -162,7 +158,6 @@ GO
 информация о клиенте; общее кол-во накладных; суммарное кол-во товаров; ожидаемый доход; общее кол-во аннулированных накладных;
 недополученный доход; долг.
 */
-
 SELECT	Customer.CustomerID AS 'ID клиента',
 		Customer.CustomerType AS 'Тип клиента',
 		COUNT(Invoice.InvoiceID) AS 'Кол-во оформленных накладных',
@@ -188,7 +183,6 @@ FROM	Customer LEFT OUTER JOIN Invoice
 			ON #Deal1.InvoiceID = #Invoice.InvoiceID
 		)
 		ON #Deal.InvoiceID = #Invoice.InvoiceID AND #Invoice.Canceled = 'Аннулировано'
-
 GROUP BY Customer.CustomerID, Customer.CustomerType
 HAVING COUNT(Invoice.InvoiceID) = COUNT(#Invoice.InvoiceID) AND COUNT(#Invoice.InvoiceID) != 0
 GO

@@ -12,7 +12,6 @@ GO
 текущего количества товаров на складе, и при отсутствии хотя бы одного
 товара выполнять откат транзакции с удалением отсутсвующих позиций из накладной.
 */
-
 CREATE TRIGGER TriggerForPaymentDocument
 ON PaymentDocument
 FOR UPDATE
@@ -75,7 +74,6 @@ SET PaymentDate = GETDATE()
 При вставке в таблицу "Накладная на отпуск товара" уменьшать
 текущее количетсво товаров на складе.
 */
-
 CREATE TRIGGER TriggerForDeal
 ON Deal
 FOR INSERT
