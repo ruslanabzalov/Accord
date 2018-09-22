@@ -11,7 +11,7 @@ USE accord
 GO
 
 /*
-ОПИСАНИЕ ТАБЛИЦ.
+СОЗДАНИЕ ТАБЛИЦ.
 */
 
 -- Таблица "Покупатели".
@@ -34,7 +34,7 @@ CREATE TABLE persons (
 	passport_id VARCHAR(6) NOT NULL,
 	home_address NVARCHAR(60) NOT NULL,
 	phone_number VARCHAR(16) NOT NULL,
-	changed_at DATETIME NULL,
+	edited DATETIME NULL,
 
 	CHECK(passport_series LIKE '[0-9][0-9] [0-9][0-9]'),
 	CHECK(passport_id LIKE '[0-9][0-9][0-9][0-9][0-9][0-9]'),
@@ -53,7 +53,7 @@ CREATE TABLE companies (
 	license_id VARCHAR(20) NOT NULL,
 	bank_details NVARCHAR(40) NOT NULL,
 	category NVARCHAR(30) NOT NULL,
-	changed_at DATETIME NULL,
+	edited DATETIME NULL,
 
 	CHECK(phone_number LIKE '+7([0-9][0-9][0-9])[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
 	CHECK(license_id > 0),
@@ -132,7 +132,7 @@ CREATE TABLE invoices (
 	issue_date DATETIME NOT NULL,
 	payment_date DATETIME NULL,
 	export_time DATETIME NOT NULL,
-	canceled NVARCHAR(30) NULL,
+	invoice_status NVARCHAR(30) NOT NULL DEFAULT N'Активна',
 
 	CHECK(price_number > 0)
 )
@@ -153,6 +153,7 @@ GO
 ЗАПОЛНЕНИЕ ТАБЛИЦ ДАННЫМИ.
 */
 
+-- Вставка данных в таблицу "Покупатели".
 INSERT INTO customers
 VALUES
 	(N'Частное лицо'),
@@ -165,6 +166,7 @@ VALUES
 	(N'Частное лицо')
 GO
 
+-- Вставка данных в таблицу "Частные лица".
 INSERT INTO persons
 VALUES
 	(1, N'Иванов', N'Иван', N'Иванович', '1985-03-05', '45 26', '325896', N'Октябрьская улица, 57', '+7(999)965-87-36', NULL),
@@ -174,6 +176,7 @@ VALUES
 	(8, N'Куприянов', N'Владимир', N'Владимирович', '1993-09-06', '45 16', '965245', N'Советская улица, 29', '+7(985)346-28-43', NULL)
 GO
 
+-- Вставка данных в таблицу "Юридические лица".
 INSERT INTO companies
 VALUES
 	(3, N'ГорГаз', N'Московская улица, 66', '+7(915)846-96-32', '852963741', N'Сбербанк России', N'Государственное предприятие', NULL),
@@ -181,6 +184,7 @@ VALUES
 	(6, 'Dirty Monk Inc.', N'Международный проспект, 3', '+7(915)846-96-32', '789654123', N'Рокетбанк', N'Частная организация', NULL)
 GO
 
+-- Вставка данных в таблицу "Группы покупателей".
 INSERT INTO customers_groups
 VALUES
 	(N'Новый клиент'),
@@ -188,6 +192,7 @@ VALUES
 	(N'Льготник')
 GO
 
+-- Вставка данных в таблицу "Покупатели в группах покупателях".
 INSERT INTO customers_in_customers_group
 VALUES
 	(1, 1),
@@ -200,6 +205,7 @@ VALUES
 	(8, 2)
 GO
 
+-- Вставка данных в таблицу "Товары".
 INSERT INTO products
 VALUES
 	(N'Молоток', 123, 456, N'Большая упаковка', N'Твой инструмент', 20),
@@ -210,6 +216,7 @@ VALUES
 	(N'Сверло', 987, 888, N'Маленькая упаковка', N'Твой инструмент', 9)
 GO
 
+-- Вставка данных в таблицу "Прайс-листы".
 INSERT INTO price_lists
 VALUES
 	(1, '2000-01-01', N'Основной'),
@@ -217,6 +224,7 @@ VALUES
 	(3, '2001-01-01', N'Скидочный+')
 GO
 
+-- Вставка данных в таблицу "Товары в прайс-листах".
 INSERT INTO products_in_price_lists
 VALUES
 	(1, 1, 1000),
@@ -239,6 +247,7 @@ VALUES
 	(3, 6, 40)
 GO
 
+-- Вставка данных в таблицу "Платёжные документы".
 INSERT INTO payment_documents
 VALUES
 	(N'Приходной кассовый ордер', NULL, 3000),
@@ -252,19 +261,21 @@ VALUES
 	(N'Банковское платёжное поручение', NULL, 3300)
 GO
 
+-- Вставка данных в таблицу "Накладные".
 INSERT INTO invoices
 VALUES
-	(1, 1, 1, '2016-02-04', NULL, '2016-02-04', NULL),
-	(2, 2, 2, '2016-10-16', NULL, '2016-10-16', NULL),
-	(3, 3, 2, '2016-11-22', NULL, '2016-11-22', NULL),
-	(5, 4, 3, '2016-02-07', NULL, '2016-02-07', NULL),
-	(3, 5, 2, '2016-09-24', NULL, '2016-09-24', NULL),
-	(3, 6, 2, '2016-08-11', NULL, '2016-08-11', NULL),
-	(2, 7, 2, '2016-12-08', NULL, '2016-12-08', NULL),
-	(7, 8, 1, '2016-02-11', NULL, '2016-02-11', NULL),
-	(6, 9, 2, '2016-12-12', NULL, '2016-12-12', NULL)
+	(1, 1, 1, '2016-02-04', NULL, '2016-02-04', DEFAULT),
+	(2, 2, 2, '2016-10-16', NULL, '2016-10-16', DEFAULT),
+	(3, 3, 2, '2016-11-22', NULL, '2016-11-22', DEFAULT),
+	(5, 4, 3, '2016-02-07', NULL, '2016-02-07', DEFAULT),
+	(3, 5, 2, '2016-09-24', NULL, '2016-09-24', DEFAULT),
+	(3, 6, 2, '2016-08-11', NULL, '2016-08-11', DEFAULT),
+	(2, 7, 2, '2016-12-08', NULL, '2016-12-08', DEFAULT),
+	(7, 8, 1, '2016-02-11', NULL, '2016-02-11', DEFAULT),
+	(6, 9, 2, '2016-12-12', NULL, '2016-12-12', DEFAULT)
 GO
 
+-- Вставка данных в таблицу "Сделки".
 INSERT INTO deals
 VALUES
 	(1, 4, 1),
@@ -282,12 +293,14 @@ GO
 ВЫБОРКА ВСЕХ ДАННЫХ ИЗ ВСЕХ ТАБЛИЦ.
 */
 
+-- Выборка всех данных из таблицы "Покупатели".
 SELECT 
 	customers.id AS 'Идентификатор',
 	customers.customers_type AS 'Тип покупателя'
 FROM customers
 GO
 
+-- Выборка всех данных из таблицы "Частные лица".
 SELECT
 	persons.id AS 'Идентификатор',
 	persons.last_name AS 'Фамилия',
@@ -298,10 +311,11 @@ SELECT
 	persons.passport_id AS 'Номер паспорта',
 	persons.home_address AS 'Домашний адрес',
 	persons.phone_number AS 'Номер телефона',
-	persons.changed_at AS 'Дата изменения'
+	persons.edited AS 'Дата изменения'
 FROM persons
 GO
 
+-- Выборка всех данных из таблицы "Юридические лица".
 SELECT
 	companies.id AS 'Идентификатор',
 	companies.company_name AS 'Название компании',
@@ -310,22 +324,25 @@ SELECT
 	companies.license_id AS 'Номер лицензии',
 	companies.bank_details AS 'Информация о банке',
 	companies.category AS 'Категория',
-	companies.changed_at AS 'Дата изменения'
+	companies.edited AS 'Дата изменения'
 FROM companies
 GO
 
+-- Выборка всех данных из таблицы "Группы покупателей".
 SELECT
 	customers_groups.id AS 'Идентификатор',
 	customers_groups.group_name AS 'Название группы покупателей'
 FROM customers_groups
 GO
 
+-- Выборка всех данных из таблицы "Покупатели в группах покупателей".
 SELECT
 	customers_in_customers_group.customer_id AS 'Идентификатор покупателя',
 	customers_in_customers_group.group_id AS 'Идентификатор группы покупателей'
 FROM customers_in_customers_group
 GO
 
+-- Выборка всех данных из таблицы "Товары".
 SELECT
 	products.id AS 'Идентификатор',
 	products.product_name AS 'Название товара',
@@ -337,6 +354,7 @@ SELECT
 FROM products
 GO
 
+-- Выборка всех данных из таблицы "Прайс-листы".
 SELECT
 	price_lists.id AS 'Идентификатор',
 	price_lists.group_id AS 'Идентификатор группы покупателей',
@@ -345,6 +363,7 @@ SELECT
 FROM price_lists
 GO
 
+-- Выборка всех данных из таблицы "Товары в прайс-листах".
 SELECT
 	products_in_price_lists.id AS 'Идентификатор',
 	products_in_price_lists.price_list_id AS 'Идентификатор прайс-листа',
@@ -353,6 +372,7 @@ SELECT
 FROM products_in_price_lists
 GO
 
+-- Выборка всех данных из таблицы "Платёжные документы".
 SELECT
 	payment_documents.id AS 'Идентификатор',
 	payment_documents.document_type AS 'Тип документа',
@@ -361,18 +381,24 @@ SELECT
 FROM payment_documents
 GO
 
+-- Выборка всех данных из таблицы "Накладные".
 SELECT
 	invoices.id AS 'Идентификатор',
 	invoices.customer_id AS 'Идентификатор покупателя',
 	invoices.document_id AS 'Идентификатор платёжного документа',
-	invoices.price_number AS 'Сумма к оплате',
+	invoices.price_number AS 'Номер прайс-листа',
 	invoices.issue_date AS 'Дата выпуска (?)',
 	invoices.payment_date AS 'Дата оплаты',
 	invoices.export_time AS 'Время экспорта (?)',
-	invoices.canceled AS 'Статус'
+	invoices.invoice_status AS 'Статус'
 FROM invoices
 GO
 
-SELECT *
+-- Выборка всех данных из таблицы "Сделки".
+SELECT
+	deals.id AS 'Идентификатор',
+	deals.invoice_id AS 'Идентификатор накладной',
+	deals.product_in_price_id AS 'Идентификатор товара в прайс-листе',
+	deals.quantity AS 'Количество'
 FROM deals
 GO
